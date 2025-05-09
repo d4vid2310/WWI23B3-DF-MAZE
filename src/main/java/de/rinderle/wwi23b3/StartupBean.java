@@ -1,115 +1,136 @@
 package de.rinderle.wwi23b3;
 
-import jakarta.annotation.PostConstruct;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.openapitools.client.api.DefaultApi;
 import org.openapitools.client.model.*;
 
 import java.math.BigDecimal;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.Set;
 
 @Component
 public class StartupBean {
 
-    private static final int SIZE = 5; // Spielfeldgröße 5x5
-    private DefaultApi api;
+    private static final int SIZE = 5;
+    private static final Pos GOAL = new Pos(SIZE - 1, SIZE - 1);
+
+    private final DefaultApi api = new DefaultApi();
     private BigDecimal gameId;
-    private int x;
-    private int y;
+    private int x, y;
 
-    @PostConstruct
-    public void init() {
-        try {
-            api = new DefaultApi();
+    private static record Pos(int x, int y) {}
 
-            GameInputDto gameInput = new GameInputDto();
-            gameInput.setGroupName("KA-WWI23-B3");
+    private final Set<Pos> visited = new HashSet<>();
+    private final Set<Pos> walls   = new HashSet<>();
+    private final Deque<Pos> stack  = new ArrayDeque<>();
 
-            GameDto game = api.gamePost(gameInput);
-            gameId = game.getGameId();
-            x = game.getPosition().getPositionX().intValue();
-            y = game.getPosition().getPositionY().intValue();
+    private final DirectionDto[] priority = {
+        DirectionDto.UP,
+        DirectionDto.RIGHT,
+        DirectionDto.DOWN,
+        DirectionDto.LEFT
+    };
 
-            System.out.println("Neues Spiel gestartet! Game-ID: " + gameId);
-            System.out.println("Start-Position: (" + x + ", " + y + ")");
-
-            play();
-
-        } catch (Exception e) {
-            System.err.println("Fehler im Maze-Client:");
-            e.printStackTrace();
-        }
+    @EventListener(ApplicationReadyEvent.class)
+    public void start() {
+        // Spiel starten
+        GameDto game = api.gamePost(new GameInputDto().groupName("KA-WWI23-B3"));
+        gameId = game.getGameId();
+        x = game.getPosition().getPositionX().intValue();
+        y = game.getPosition().getPositionY().intValue();
+        Pos start = new Pos(x, y);
+        System.out.println("Neues Spiel: ID=" + gameId + ", Start=" + start);
+        solve(start);
     }
 
-    private void play() throws Exception {
-        while (true) {
-            boolean moved = false;
+    private void solve(Pos start) {
+        visited.add(start);
+        stack.push(start);
 
-            // PHASE 1: Hoch, Hoch, Hoch so lange es geht
-            while (tryMove(DirectionDto.UP)) {
-                moved = true;
+        while (!stack.isEmpty()) {
+            Pos curr = stack.peek();
+            if (curr.equals(GOAL)) {
+                System.out.println("Ziel erreicht bei " + curr);
+                return;
             }
 
-            // PHASE 2: Wenn Hoch blockiert, einmal nach Rechts
-            if (tryMove(DirectionDto.RIGHT)) {
-                moved = true;
-
-                // Nach Rechts wieder PHASE 1: Hoch, Hoch, Hoch
-                while (tryMove(DirectionDto.UP)) {
+            boolean moved = false;
+            for (DirectionDto dir : priority) {
+                Pos next = movePos(curr, dir);
+                if (!isValid(next) || visited.contains(next) || walls.contains(next)) {
+                    continue;
+                }
+                Pos movedTo = tryMove(dir);
+                if (movedTo != null) {
+                    visited.add(movedTo);
+                    stack.push(movedTo);
                     moved = true;
+                    break;
+                } else {
+                    walls.add(next);
                 }
             }
 
-            // Wenn weder Hoch noch Rechts geht
             if (!moved) {
-                System.out.println("Keine möglichen Züge mehr. Spiel beendet.");
-                return;
+                // Prüfen, ob wir überhaupt noch zurückkönnen
+                if (stack.size() <= 1) {
+                    System.out.println("Kein Weg mehr zum Ziel. Spiel beendet.");
+                    return;
+                }
+                // echtes Dead-End: Pop und lokal zurücksetzen
+                stack.pop();                    
+                Pos back = stack.peek();       
+                x = back.x;                    
+                y = back.y;
+                System.out.println("Backtrack zu " + back);
             }
+        }
 
-            // Prüfen ob Spielziel erreicht wurde
-            GameDto currentGameState = api.gameGameIdGet(gameId);
-            if ("success".equals(currentGameState.getStatus().toString())) {
-                System.out.println("Ziel erreicht!");
-                return;
+        System.out.println("Kein Weg zum Ziel");
+    }
+
+    private Pos tryMove(DirectionDto dir) {
+        try {
+            MoveDto res = api.gameGameIdMovePost(
+                gameId,
+                new MoveInputDto().direction(dir)
+            );
+            if (MoveStatusDto.MOVED.equals(res.getMoveStatus())) {
+                x = res.getPositionAfterMove().getPositionX().intValue();
+                y = res.getPositionAfterMove().getPositionY().intValue();
+                Pos p = new Pos(x, y);
+                System.out.println(dir + " → " + p);
+                return p;
+            } else {
+                System.out.println("Blockiert: " + dir);
+                return null;
             }
+        } catch (HttpClientErrorException bre) {
+            // 400 Bad Request behandeln wie BLOCKED
+            System.out.println("Ungültiger Move (400): " + dir);
+            return null;
+        } catch (Exception ex) {
+            System.err.println("Unerwarteter Fehler bei Move " + dir);
+            ex.printStackTrace();
+            return null;
         }
     }
 
-    private boolean tryMove(DirectionDto direction) {
-        int newX = x;
-        int newY = y;
+    private Pos movePos(Pos p, DirectionDto d) {
+        return switch (d) {
+            case UP    -> new Pos(p.x,     p.y + 1);
+            case DOWN  -> new Pos(p.x,     p.y - 1);
+            case LEFT  -> new Pos(p.x - 1, p.y);
+            case RIGHT -> new Pos(p.x + 1, p.y);
+        };
+    }
 
-        switch (direction) {
-            case UP -> newY++;
-            case RIGHT -> newX++;
-            case LEFT -> newX--;
-            case DOWN -> newY--;
-        }
-
-        // Spielfeldgrenzen prüfen
-        if (newX < 0 || newX >= SIZE || newY < 0 || newY >= SIZE) {
-            return false;
-        }
-
-        MoveInputDto moveInput = new MoveInputDto().direction(direction);
-        MoveDto moveResult;
-
-        try {
-            moveResult = api.gameGameIdMovePost(gameId, moveInput);
-        } catch (Exception e) {
-            System.out.println("API Fehler bei Bewegung: " + direction);
-            return false;
-        }
-
-        System.out.println("Bewegung: " + direction);
-        System.out.println("Neues Feld: (" + moveResult.getPositionAfterMove().getPositionX() + ", " + moveResult.getPositionAfterMove().getPositionY() + ")");
-        System.out.println("Move-Status: " + moveResult.getMoveStatus());
-
-        if ("moved".equals(moveResult.getMoveStatus())) {
-            x = moveResult.getPositionAfterMove().getPositionX().intValue();
-            y = moveResult.getPositionAfterMove().getPositionY().intValue();
-            return true;
-        }
-
-        return false;
+    private boolean isValid(Pos p) {
+        return p.x >= 0 && p.x < SIZE && p.y >= 0 && p.y < SIZE;
     }
 }

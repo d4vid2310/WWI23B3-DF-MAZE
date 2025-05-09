@@ -32,7 +32,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
   PositionDto.JSON_PROPERTY_POSITION_Y
 })
 @JsonTypeName("Position")
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2025-04-29T07:13:21.326480200+02:00[Europe/Berlin]", comments = "Generator version: 7.10.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2025-05-09T12:06:13.946555300+02:00[Europe/Berlin]", comments = "Generator version: 7.10.0")
 public class PositionDto {
   public static final String JSON_PROPERTY_POSITION_X = "positionX";
   @jakarta.annotation.Nullable

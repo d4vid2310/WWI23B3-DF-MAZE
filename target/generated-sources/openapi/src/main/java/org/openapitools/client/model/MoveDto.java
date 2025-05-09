@@ -37,7 +37,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
   MoveDto.JSON_PROPERTY_MOVE_STATUS
 })
 @JsonTypeName("Move")
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2025-04-29T07:13:21.326480200+02:00[Europe/Berlin]", comments = "Generator version: 7.10.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2025-05-09T12:06:13.946555300+02:00[Europe/Berlin]", comments = "Generator version: 7.10.0")
 public class MoveDto {
   public static final String JSON_PROPERTY_MOVE_ID = "moveId";
   @jakarta.annotation.Nullable

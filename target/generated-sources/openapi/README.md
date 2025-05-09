@@ -4,7 +4,7 @@ Maze Game API
 
 - API version: 1.0.0
 
-- Build date: 2025-04-29T07:13:21.326480200+02:00[Europe/Berlin]
+- Build date: 2025-05-09T12:06:13.946555300+02:00[Europe/Berlin]
 
 - Generator version: 7.10.0
 
