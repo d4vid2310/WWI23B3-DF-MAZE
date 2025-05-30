@@ -39,7 +39,7 @@ public class StartupBean {
 
     @EventListener(ApplicationReadyEvent.class)
     public void start() {
-        GameDto game = api.gamePost(new GameInputDto().groupName("KA-WWI23-B3"));
+        GameDto game = api.gamePost(new GameInputDto().groupName("WWI23B3-DF"));
         gameId = game.getGameId();
         x = game.getPosition().getPositionX().intValue();
         y = game.getPosition().getPositionY().intValue();
