@@ -17,7 +17,7 @@ import java.util.Set;
 public class StartupBean {
 
     private static final int SIZE = 5;
-    private static final Pos GOAL = new Pos(SIZE - 1, SIZE - 1);
+    private static final Pos GOAL = new Pos(5, 5); // Zielposition im Labyrinth
 
     private final DefaultApi api = new DefaultApi();
     private BigDecimal gameId;

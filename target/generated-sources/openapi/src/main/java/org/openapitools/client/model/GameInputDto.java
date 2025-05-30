@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
   GameInputDto.JSON_PROPERTY_GROUP_NAME
 })
 @JsonTypeName("GameInput")
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2025-05-09T12:15:23.993998+02:00[Europe/Berlin]", comments = "Generator version: 7.10.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2025-05-30T07:11:51.839631500+02:00[Europe/Berlin]", comments = "Generator version: 7.10.0")
 public class GameInputDto {
   public static final String JSON_PROPERTY_GROUP_NAME = "groupName";
   @jakarta.annotation.Nullable
