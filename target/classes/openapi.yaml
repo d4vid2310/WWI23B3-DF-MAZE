@@ -17,14 +17,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GameInput'
+              $ref: "#/components/schemas/GameInput"
       responses:
-        '201':
+        "201":
           description: Game started successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Game'
+                $ref: "#/components/schemas/Game"
   /game/{gameId}:
     get:
       summary: Get game status
@@ -36,13 +36,13 @@ paths:
           schema:
             type: number
       responses:
-        '200':
+        "200":
           description: Game status retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Game'
-        '404':
+                $ref: "#/components/schemas/Game"
+        "404":
           description: Game not found
 
   /game/{gameId}/move:
@@ -60,14 +60,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/MoveInput'
+              $ref: "#/components/schemas/MoveInput"
       responses:
-        '200':
+        "200":
           description: Move result
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Move'
+                $ref: "#/components/schemas/Move"
     get:
       summary: Get all moves
       description: Retrieves the history of moves the player has made in the game.
@@ -78,15 +78,15 @@ paths:
           schema:
             type: number
       responses:
-        '200':
+        "200":
           description: List of all moves made by the player
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Move'
-        '404':
+                  $ref: "#/components/schemas/Move"
+        "404":
           description: Game not found
 
   /game/{gameId}/move/{moveId}:
@@ -105,13 +105,13 @@ paths:
           schema:
             type: number
       responses:
-        '200':
+        "200":
           description: Game status retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Move'
-        '404':
+                $ref: "#/components/schemas/Move"
+        "404":
           description: Move not found
 
 components:
@@ -164,12 +164,12 @@ components:
 
     GameStatus:
       type: string
-      enum: [ ongoing, failed, success ]
+      enum: [ongoing, failed, success]
 
     MoveStatus:
       type: string
-      enum: [ moved, blocked, failed ]
+      enum: [moved, blocked, failed]
 
     Direction:
       type: string
-      enum: [ left, up, right, down ]
+      enum: [left, up, right, down]
